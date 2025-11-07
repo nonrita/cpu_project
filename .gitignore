@@ -1,0 +1,11 @@
+# ビルド・シミュレーション出力
+build/
+sim/waveforms/
+
+# エディタやIDEの設定ファイル
+.vscode/
+.idea/
+
+# OSごとの不要ファイル
+.DS_Store
+Thumbs.db
