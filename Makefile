@@ -5,12 +5,16 @@
 #   make tb=tb_and
 # ======================================================
 
-# ソースファイルを自動で集める
-SRC := $(wildcard src/gates/*.v)
+# src 以下の全ての Verilog ファイルを集める
+SRC := $(wildcard src/**/*.v)  # src 以下のサブフォルダも含む
 
 # テストベンチ（コマンドラインで指定、デフォルトは tb_not）
 TB  ?= tb_not
-TB_PATH := sim/tb_gates/$(TB).v
+
+# テストベンチフォルダ自動判定
+# tb_not が gates, alu, flipflops などに属する場合に自動で選択
+TB_DIR := $(shell find sim -type f -name "$(TB).v" -exec dirname {} \;)
+TB_PATH := $(TB_DIR)/$(TB).v
 
 # 出力ファイル名
 OUT := build/$(TB).out
@@ -19,9 +23,11 @@ OUT := build/$(TB).out
 WAVE_DIR := sim/waveforms
 $(shell mkdir -p $(WAVE_DIR) build)
 
-# iverilogとvvpを使ってビルド & 実行
+# ビルド & 実行
 all:
 	@echo "🔧 Building $(TB)..."
+	@echo "SRC files: $(SRC)"
+	@echo "TB file: $(TB_PATH)"
 	iverilog -o $(OUT) $(SRC) $(TB_PATH)
 	@echo "🚀 Running simulation..."
 	vvp $(OUT)
