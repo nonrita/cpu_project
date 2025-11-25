@@ -8,11 +8,11 @@ module d_latch (
     wire R_bar;
     wire D_bar;
 
-    not not_d(D_bar, D);
+    not_gate not_d(D, D_bar);
 
-    nand nand_s(S_bar, E, D);
+    nand_gate nand_s(E, D, S_bar);
 
-    nand nand_r(R_bar, E, D_bar);
+    nand_gate nand_r(E, D_bar, R_bar);
 
     sr_latch latch (
         .S_bar(S_bar),
