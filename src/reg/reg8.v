@@ -2,6 +2,7 @@ module reg8 (
     input [7:0] D,
     input CLK,
     input WE,
+    input RST,
     output [7:0] Q
 );
     genvar i;
@@ -15,6 +16,7 @@ module reg8 (
             d_ff ff_i (
               .D(D_in_i),
               .CLK(CLK),
+              .RST(RST),
               .Q(Q[i])
             );
         end
