@@ -3,68 +3,116 @@
 module tb_d_ff;
     reg D;
     reg CLK;
+    reg RST;
     wire Q;
     wire Q_bar;
 
     d_ff dut (
         .D(D),
         .CLK(CLK),
+        .RST(RST),
         .Q(Q),
         .Q_bar(Q_bar)
     );
 
+    // クロック生成（周期10ns）
     initial begin
         CLK = 0;
         forever #5 CLK = ~CLK; 
     end
 
+    // モニタリング
     initial begin
-        $display("時間(ns) | CLK | D | Q | 動作内容");
-        $display("---------|-----|---|---|-----------------------------------------");
-        $monitor("%0t | %b | %b | %b |", $time, CLK, D, Q);
-    end
-
-    initial begin
-        $display("--- Dフリップフロップ テスト開始 ---");
-        $display("CLK周期: 10ns | 動作エッジ: 立ち上がり (posedge)");
-        $display("-----------------------------------------------------");
+        $display("========================================");
+        $display("  Dフリップフロップ（リセット機能付き）");
+        $display("========================================");
+        $display("");
         $dumpfile("sim/waveforms/d_ff_test.vcd");
         $dumpvars(0, tb_d_ff);
+    end
 
+    // テストシナリオ
+    initial begin
+        // 初期化
         D = 0;
-        @(negedge CLK);
-        $display("時間 %t: [初期状態] D=%b, Q=%b (不定)", $time, D, Q);
-        
-        $display("時間 %t: [準備] D=1を設定 (Qはまだ0を保持)", $time);
-        D = 1;
-        #5;
+        RST = 0;
+        #12;
 
+        // テスト1: リセット機能
+        $display("[テスト1] リセット機能");
+        $display("  - RST=1にすると、Q=0になる");
+        D = 1;
+        RST = 1;
+        #10;
+        if (Q == 0)
+            $display("  ✓ 成功: RST=1でQ=0 (実際: Q=%b)", Q);
+        else
+            $display("  ✗ 失敗: RST=1でQ=0のはずが Q=%b", Q);
+        $display("");
+
+        // テスト2: リセット解除後の動作
+        $display("[テスト2] リセット解除してD=1を書き込み");
+        $display("  - RST=0に戻して、CLK↑でD=1を取り込む");
+        RST = 0;
+        D = 1;
         @(posedge CLK);
-        $display("時間 %t: [テスト1: キャプチャ] CLK立ち上がり。D=%bがQ=%bに反映 (期待値: 1)", $time, D, Q);
-        
-        $display("時間 %t: [テスト2: 保持] CLK High中にD=0に変更. Q=%b (期待値: 1を保持)", $time, Q);
+        @(negedge CLK);  // マスタースレーブFFなのでCLK↓で完全反映
+        #1;
+        if (Q == 1)
+            $display("  ✓ 成功: CLK↑でD=1が反映 (実際: Q=%b)", Q);
+        else
+            $display("  ✗ 失敗: Q=1のはずが Q=%b", Q);
+        $display("");
+
+        // テスト3: データ保持
+        $display("[テスト3] データ保持");
+        $display("  - D=0に変更してもCLK↑まではQ=1を保持");
         D = 0;
-        #5;
-        
-        @(negedge CLK);
-        $display("時間 %t: [中間伝達] CLK立ち下がり。Q=%bに更新 (期待値: 0)", $time, Q);
+        #3;
+        if (Q == 1)
+            $display("  ✓ 成功: D変更後もQ=1を保持 (実際: Q=%b)", Q);
+        else
+            $display("  ✗ 失敗: Q=1を保持すべきだが Q=%b", Q);
+        $display("");
 
-        #5;
+        // テスト4: 次のクロックでD=0を取り込み
+        $display("[テスト4] 次のクロックでD=0を取り込み");
         @(posedge CLK);
-        $display("時間 %t: [テスト3: 保持] CLK立ち上がり。D=%b. Q=%b (期待値: 0を保持)", $time, D, Q);
+        @(negedge CLK);
+        #1;
+        if (Q == 0)
+            $display("  ✓ 成功: CLK↑でD=0が反映 (実際: Q=%b)", Q);
+        else
+            $display("  ✗ 失敗: Q=0のはずが Q=%b", Q);
+        $display("");
 
-        $display("時間 %t: [テスト4: 準備] CLK High中にD=1に変更.", $time);
+        // テスト5: 再度D=1を書き込み
+        $display("[テスト5] 再度D=1を書き込み");
         D = 1;
-        #5;
-        
-        @(negedge CLK);
-        #5;
-        
         @(posedge CLK);
-        $display("時間 %t: [テスト4: キャプチャ] CLK立ち上がり。D=%bがQ=%bに反映 (期待値: 1)", $time, D, Q);
+        @(negedge CLK);
+        #1;
+        if (Q == 1)
+            $display("  ✓ 成功: CLK↑でD=1が反映 (実際: Q=%b)", Q);
+        else
+            $display("  ✗ 失敗: Q=1のはずが Q=%b", Q);
+        $display("");
 
-        $display("-----------------------------------------------------");
-        $display("--- Dフリップフロップ テスト終了 ---");
+        // テスト6: 保持中にリセット
+        $display("[テスト6] Q=1の状態でリセット");
+        $display("  - RST=1で即座にQ=0になる");
+        RST = 1;
+        #1;
+        if (Q == 0)
+            $display("  ✓ 成功: RST=1で即座にQ=0 (実際: Q=%b)", Q);
+        else
+            $display("  ✗ 失敗: Q=0のはずが Q=%b", Q);
+        $display("");
+
+        $display("========================================");
+        $display("  テスト完了");
+        $display("========================================");
+        #10;
         $finish;
     end
 endmodule
