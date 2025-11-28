@@ -38,16 +38,18 @@ module tb_d_ff;
         RST = 0;
         #12;
 
-        // テスト1: リセット機能
-        $display("[テスト1] リセット機能");
-        $display("  - RST=1にすると、Q=0になる");
-        D = 1;
+        // テスト1: 同期リセット機能
+        $display("[テスト1] 同期リセット機能");
+        $display("  - RST=1でCLK↑時にQ=0になる（同期リセット）");
         RST = 1;
-        #10;
+        D = 1;
+        @(posedge CLK);
+        @(negedge CLK);
+        #1;
         if (Q == 0)
-            $display("  ✓ 成功: RST=1でQ=0 (実際: Q=%b)", Q);
+            $display("  ✓ 成功: RST=1+CLK↑でQ=0 (実際: Q=%b)", Q);
         else
-            $display("  ✗ 失敗: RST=1でQ=0のはずが Q=%b", Q);
+            $display("  ✗ 失敗: Q=0のはずが Q=%b", Q);
         $display("");
 
         // テスト2: リセット解除後の動作
@@ -98,13 +100,15 @@ module tb_d_ff;
             $display("  ✗ 失敗: Q=1のはずが Q=%b", Q);
         $display("");
 
-        // テスト6: 保持中にリセット
-        $display("[テスト6] Q=1の状態でリセット");
-        $display("  - RST=1で即座にQ=0になる");
+        // テスト6: 保持中に同期リセット
+        $display("[テスト6] Q=1の状態で同期リセット");
+        $display("  - RST=1+CLK↑でQ=0になる（同期リセット）");
         RST = 1;
+        @(posedge CLK);
+        @(negedge CLK);
         #1;
         if (Q == 0)
-            $display("  ✓ 成功: RST=1で即座にQ=0 (実際: Q=%b)", Q);
+            $display("  ✓ 成功: RST=1+CLK↑でQ=0 (実際: Q=%b)", Q);
         else
             $display("  ✗ 失敗: Q=0のはずが Q=%b", Q);
         $display("");

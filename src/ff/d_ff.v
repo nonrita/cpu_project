@@ -1,7 +1,7 @@
 module d_ff (
     input D,
     input CLK,
-    input RST,      // リセット入力（1でリセット）
+    input RST,
     output Q,
     output Q_bar
 );
@@ -10,9 +10,8 @@ module d_ff (
     wire CLK_bar;
     wire D_in;
     wire const_0;
-    wire Q_internal;
-    wire Q_bar_internal;
 
+    // 同期リセット: RST=1の時は0を、RST=0の時はDを入力
     const_low const0(.y(const_0));
     mux2 mux_reset(.a(D), .b(const_0), .sel(RST), .y(D_in));
 
@@ -28,12 +27,7 @@ module d_ff (
     d_latch slave_latch (
         .D(M),
         .E(CLK_bar),
-        .Q(Q_internal),
-        .Q_bar(Q_bar_internal)
+        .Q(Q),
+        .Q_bar(Q_bar)
     );
-    
-    mux2 mux_q_out(.a(Q_internal), .b(const_0), .sel(RST), .y(Q));
-    wire const_1;
-    const_high const1(.y(const_1));
-    mux2 mux_qbar_out(.a(Q_bar_internal), .b(const_1), .sel(RST), .y(Q_bar));
 endmodule

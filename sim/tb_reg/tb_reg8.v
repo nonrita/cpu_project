@@ -40,14 +40,16 @@ module tb_reg8;
         RST = 0;
         #12;
 
-        // テスト1: リセット機能
-        $display("[テスト1] リセット機能");
-        $display("  - RST=1にすると、Q=00になる");
+        // テスト1: 同期リセット機能
+        $display("[テスト1] 同期リセット機能");
+        $display("  - RST=1でCLK↑時にQ=00になる（同期リセット）");
         RST = 1;
         D = 8'hFF;
-        #10;
+        @(posedge CLK);
+        @(negedge CLK);
+        #1;
         if (Q == 8'h00)
-            $display("  ✓ 成功: RST=1でQ=00 (実際: Q=%h)", Q);
+            $display("  ✓ 成功: RST=1+CLK↑でQ=00 (実際: Q=%h)", Q);
         else
             $display("  ✗ 失敗: Q=00のはずが Q=%h", Q);
         $display("");
@@ -119,13 +121,15 @@ module tb_reg8;
             $display("  ✗ 失敗: Q=11のはずが Q=%h", Q);
         $display("");
 
-        // テスト7: データ保持中にリセット
-        $display("[テスト7] データ保持中にリセット");
-        $display("  - Q=11の状態でRST=1にすると即座にQ=00");
+        // テスト7: データ保持中に同期リセット
+        $display("[テスト7] データ保持中に同期リセット");
+        $display("  - Q=11の状態でRST=1+CLK↑でQ=00");
         RST = 1;
+        @(posedge CLK);
+        @(negedge CLK);
         #1;
         if (Q == 8'h00)
-            $display("  ✓ 成功: RST=1で即座にQ=00 (実際: Q=%h)", Q);
+            $display("  ✓ 成功: RST=1+CLK↑でQ=00 (実際: Q=%h)", Q);
         else
             $display("  ✗ 失敗: Q=00のはずが Q=%h", Q);
         $display("");
